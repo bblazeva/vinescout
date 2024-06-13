@@ -1,5 +1,4 @@
-#vinescout
-
+# Vinescout
 ROS package for vinescout agricultural mobile robot
 
 Includes:
