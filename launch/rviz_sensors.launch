@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!--ROBOT MODEL-->
+  <param name="robot_description" command="xacro '$(find vinescout)/description/vinescout.urdf.xacro'"/>
+
+  <!--RVIZ CONFIG FILE-->
+  <arg name="rviz_config_file" default="$(find vinescout)/config/vinescout_sensors.rviz"/>
+
+  <!--NODES-->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rviz_config_file)"/>
+  
+</launch>

@@ -1,0 +1,13 @@
+<launch>
+
+<!--Launch gazebo-->
+<include file="$(find vinescout)/launch/vinescout_gazebo.launch"/>
+
+<!--Load joint controller configuration-->
+<rosparam file="$(find vinescout)/config/diff_drive.yaml" command="load"/>
+
+<!--Controllers-->
+<node name="base_controller_spawner" pkg="controller_manager" type="spawner"
+   args="--timeout 0 joint_state_controller diff_drive_controller"/>
+   
+</launch>

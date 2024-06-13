@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!--gazebo world, can be custom-->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+      <arg name="paused" value="false"/>
+      <arg name="use_sim_time" value="true"/>
+      <arg name="gui" value="true"/>
+      <arg name="headless" value="false"/>
+      <arg name="debug" value="false"/>   
+  </include>
+
+  <!--robot model location-->
+  <param name="robot_description" command="xacro '$(find vinescout)/description/vinescout.urdf.xacro'"/>
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher"/>
+
+  <!--SPAWN MODEL-->
+  <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" args = " -urdf -model robot_model -param robot_description"/>
+
+</launch>

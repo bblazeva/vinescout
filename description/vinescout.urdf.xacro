@@ -1,0 +1,228 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="vinescout">
+
+  <xacro:include filename="vinescout.gazebo.xacro"/>
+  <!-- <xacro:include filename="depth_camera.xacro"/> -->
+  <xacro:include filename="lidar.xacro"/>
+  <xacro:include filename="kinect_specs.xacro"/>
+
+<!--inertia xacros-->
+  <xacro:macro name="wheel_inertia" params="mass radius height">
+    <inertia ixx="${mass*(3*radius*radius + height*height)/12}" ixy="0" ixz="0"
+              iyy="${mass*(3*radius*radius + height*height)/12}" iyz="0"
+              izz="${mass*radius*radius/2}" />
+  </xacro:macro>
+
+  <xacro:macro name="box_inertia" params="mass x y z">
+    <inertia ixx="${mass*(y*y + z*z)/12}" ixy="0" ixz="0"
+              iyy="${mass*(x*x + z*z)/12}" iyz="0"
+              izz="${mass*(x*x + y*y)/12}" />
+  </xacro:macro>
+
+  <!--xacro for wheels-->
+  <xacro:macro name="wheel" params="name x y rot_y joint_axis">
+  <!--for param name: left/right_front/rear-->
+    <link name="wheel_${name}_link">
+      <inertial>
+        <origin xyz="0 0 -0.027" rpy="0 0 0" />
+        <mass value="22.6210289176488" />
+        <xacro:wheel_inertia mass="22.6210289176488" radius="0.29" height="0.14" />
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://vinescout/meshes/${name}_link.STL" />
+        </geometry>
+        <material name="">
+          <color rgba="0.3 0.3 0.3 1" />
+        </material>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 -0.027"/>
+        <geometry>
+          <cylinder length="0.14" radius="0.29"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="wheel_${name}_joint" type="continuous">
+      <origin xyz="${x} ${y} 0.065" rpy="1.5708 0 ${rot_y}" />
+      <parent link="chassis_link" />
+      <child link="wheel_${name}_link" />
+      <axis xyz="${joint_axis}" />
+    </joint>
+
+    <transmission name="wheel_${name}_trans" type="SimpleTransmission">
+      <type>transmission_interface/SimpleTransmission</type>
+      <actuator name="wheel_${name}_motor">
+        <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+      <joint name="wheel_${name}_joint">
+        <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+      </joint>
+    </transmission>
+  </xacro:macro>
+
+  <!--xacro for fenders-->
+  <xacro:macro name="fender" params="name y">
+    <link name="fender_${name}_link">
+      <inertial>
+        <origin xyz="0 0 0.15" rpy="0 0 0" />
+        <mass value="50" />
+        <xacro:box_inertia mass="50" x="0.75" y="0.15" z="0.35" />
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://vinescout/meshes/fender_${name}_link.STL" />
+        </geometry>
+        <material
+          name="">
+          <color rgba="0.180392156862745 0.541176470588235 0.341176470588235 1" />
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://vinescout/meshes/fender_${name}_link.STL" />
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="fender_${name}_joint" type="fixed">
+      <origin xyz="0.006 ${y} -0.33" rpy="0 0 0" />
+      <parent link="top_chassis_link" />
+      <child link="fender_${name}_link" />
+    </joint>
+  </xacro:macro>
+
+  <!--world c.s (on ground plane below the robot)-->
+  <link name="base_footprint"/>
+
+  <joint name="base_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="chassis_link"/>
+    <origin rpy="0 0 0" xyz="0 0 0.19075"/>
+  </joint>
+
+  <!--base link (chassis)-->
+  <link name="chassis_link">
+    <inertial>
+      <origin xyz="0 0 0.203" rpy="0 0 0" />
+      <mass value="100" />
+      <xacro:box_inertia mass="100" x="0.5" y="0.3" z="0.45" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://vinescout/meshes/base_link.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.764705882352941 0.756862745098039 0.8 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0.253"/>
+      <geometry>
+        <box size="1 0.36 0.53"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!--top chassis-->
+  <link name="top_chassis_link">
+    <!--inertia together with chassis_link-->
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://vinescout/meshes/top_chassis_link.STL"/>
+      </geometry>
+      <material name="">
+        <color rgba="0.956862745098039 0.956862745098039 0.956862745098039 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://vinescout/meshes/top_chassis_link.STL"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="top_chassis_joint" type="fixed">
+    <origin xyz="-0.006 0 0.527" rpy="0 0 0" />
+    <parent link="chassis_link" />
+    <child link="top_chassis_link" />
+  </joint>
+
+  <!--SENSORS-->
+  <!--gps-->
+  <link name="gps_mount_link">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://vinescout/meshes/gps_mount_link.STL"/>
+      </geometry>
+      <material name="">
+        <color rgba="0.749019607843137 0.749019607843137 0.749019607843137 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://vinescout/meshes/gps_mount_link.STL"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="gps_mount_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.065575 0 0.36"/>
+    <parent link="top_chassis_link"/>
+    <child link="gps_mount_link"/>
+  </joint>
+
+  <link name="gps_link">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://vinescout/meshes/gps_link.STL"/>
+      </geometry>
+      <material name="">
+        <color rgba="1 1 1 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://vinescout/meshes/gps_link.STL"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="gps_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0.455000000000005"/>
+    <parent link="gps_mount_link"/>
+    <child link="gps_link"/>
+  </joint>
+  
+  <!--imu-->
+  <link name="imu_link"/>
+  <joint name="imu_joint" type="fixed">
+    <origin xyz="0 0 0.151" rpy="0 0 0" />
+    <parent link="chassis_link" />
+    <child link="imu_link" />
+  </joint>
+
+  <!--WHEELS-->
+  <xacro:wheel name="left_front" x="0.31" y="0.463" rot_y="-3.1416" joint_axis="0 0 1"/>
+  <xacro:wheel name="left_rear" x="-0.31" y="0.463" rot_y="-3.1416" joint_axis="0 0 1"/>
+  <xacro:wheel name="right_front" x="0.31" y="-0.463" rot_y="0" joint_axis="0 0 -1"/>
+  <xacro:wheel name="right_rear" x="-0.31" y="-0.463" rot_y="0" joint_axis="0 0 -1"/>
+
+  <!--FENDERS-->
+  <xacro:fender name="left" y="0.3275"/>
+  <xacro:fender name="right" y="-0.3275"/>
+  
+</robot>
+
